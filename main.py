@@ -77,7 +77,7 @@ async def timetable_claim(interaction: discord.Interaction, teaching_name: str, 
     entry = f"{teaching_name} | Year {year}: {initials} – {subject} (Room {room})"
     timetable_data[f"Period {period}"].append(entry)
     embed = discord.Embed(title="Timetable Claim", description=entry, color=0x8b2828)
-    embed.set_footer(text=datetime.now(pytz.timezone("Europe/London")).strftime('%d/%m/%Y %H:%M'))
+    embed.set_footer(text=f"ID: {gen_log_id()} • {datetime.now(pytz.timezone('Europe/London')).strftime('%d/%m/%Y %H:%M')}")
     await interaction.response.send_message(interaction.user.mention, embed=embed)
 
 @bot.tree.command(name="timetable", description="View today's timetable", guild=GUILD_ID)
@@ -89,7 +89,7 @@ async def view_timetable(interaction: discord.Interaction):
     embed = discord.Embed(title="Timetable", color=0x11806A)
     for period, entries in timetable_data.items():
         embed.add_field(name=period, value="\n".join(entries) if entries else "No claims", inline=False)
-    embed.set_footer(text="Auto‑clears at midnight (UK)")
+    embed.set_footer(text=f"Auto‑clears at midnight (UK) • ID: {gen_log_id()}")
     await interaction.response.send_message(embed=embed)
 
 @bot.tree.command(name="timetable_clear", description="Clear full timetable", guild=GUILD_ID)
@@ -116,7 +116,7 @@ async def infract(interaction: discord.Interaction, user: discord.Member, reason
     if demotion_role:
         await user.remove_roles(demotion_role)
         embed.add_field(name="Demotion Role Removed:", value=demotion_role.mention, inline=False)
-    embed.set_footer(text=datetime.now(pytz.timezone("Europe/London")).strftime('%d/%m/%Y %H:%M'))
+    embed.set_footer(text=f"ID: {gen_log_id()} • {datetime.now(pytz.timezone('Europe/London')).strftime('%d/%m/%Y %H:%M')}")
     await interaction.response.send_message(user.mention, embed=embed)
 
 @bot.tree.command(name="promote", description="Log a promotion", guild=GUILD_ID)
@@ -131,7 +131,7 @@ async def promote(interaction: discord.Interaction, user: discord.Member, promot
     embed.add_field(name="Promoted By:", value=interaction.user.mention, inline=False)
     embed.add_field(name="Promotion To:", value=promotion_to, inline=False)
     embed.add_field(name="Reason:", value=reason, inline=False)
-    embed.set_footer(text="Please check your direct messages.")
+    embed.set_footer(text=f"Please check your direct messages. • ID: {gen_log_id()}")
     await interaction.response.send_message(user.mention, embed=embed)
 
 @bot.tree.command(name="session_log", description="Log a session", guild=GUILD_ID)
@@ -152,7 +152,7 @@ async def session_log(interaction: discord.Interaction, user: discord.Member, se
     embed.add_field(name="Logged By:", value=interaction.user.mention, inline=False)
     embed.add_field(name="Session Date:", value=session_date, inline=False)
     embed.set_image(url=evidence_upload.url)
-    embed.set_footer(text=f"Check your DMs • {log_id} • {timestamp.strftime('%d/%m/%Y %H:%M')}")
+    embed.set_footer(text=f"Check your DMs • ID: {log_id} • {timestamp.strftime('%d/%m/%Y %H:%M')}")
     await interaction.response.send_message(user.mention, embed=embed)
 
 @bot.tree.command(name="view_logs", description="View session logs this week", guild=GUILD_ID)
@@ -163,13 +163,13 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
     entries.sort(key=lambda e: e["dt"])
 
     embed = discord.Embed(title="Session Logs", color=0x8b2828)
-    embed.add_field(name=str(user), value="\u200b", inline=False)
+    embed.add_field(name=str(user), value="​", inline=False)
     if not entries:
         embed.add_field(name="No logs this week", value="No session logs from Sunday to Saturday.", inline=False)
     else:
         for e in entries:
             ts = e["dt"].strftime('%d/%m/%Y %H:%M')
-            embed.add_field(name="\u200b", value=f"[View Log]({e['url']}) — `{e['id']}` • {ts}", inline=False)
+            embed.add_field(name="​", value=f"[View Log]({e['url']}) — `{e['id']}` • {ts}", inline=False)
     await interaction.response.send_message(interaction.user.mention, embed=embed)
 
 bot.run(TOKEN)
