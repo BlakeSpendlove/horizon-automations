@@ -25,7 +25,7 @@ CHANNEL_INFRACT = 1394403198642556948
 CHANNEL_PROMOTE = 1394403244431769753
 CHANNEL_SESSION_LOG = 1394403467417747598
 
-# In-memory storage for logs
+# In-memory storage for logs: {user_id: [ {id, datetime, session_date, attachment_url} ] }
 user_logs = {}
 
 intents = discord.Intents.default()
@@ -65,6 +65,79 @@ async def reset_timetable():
         global timetable_data
         timetable_data = {f"Period {i}": [] for i in range(1, 6)}
         print("Timetable data reset at UK midnight.")
+
+@bot.tree.command(name="timetable_claim", description="Claim a timetable period", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_TIMETABLE_CLAIM)
+@app_commands.describe(year="Year group you are teaching", subject="Subject", room="Room", period="Which period")
+async def timetable_claim(interaction: discord.Interaction, year: str, subject: str, room: str, period: str):
+    if interaction.channel.id != CHANNEL_TIMETABLE_CLAIM:
+        return await interaction.response.send_message("You can only use this command in the timetable claim channel.", ephemeral=True)
+
+    entry = f"{interaction.user.mention} | {year} | {subject} | {room}"
+    timetable_data[period].append(entry)
+
+    embed = discord.Embed(title="Timetable Claim", color=0x8b2828)
+    embed.add_field(name="Period", value=period, inline=True)
+    embed.add_field(name="Year", value=year, inline=True)
+    embed.add_field(name="Subject", value=subject, inline=True)
+    embed.add_field(name="Room", value=room, inline=True)
+    embed.set_footer(text=generate_footer("Timetable"))
+
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="timetable", description="View timetable claims", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_TIMETABLE_VIEW)
+async def timetable(interaction: discord.Interaction):
+    if interaction.channel.id != CHANNEL_TIMETABLE_VIEW:
+        return await interaction.response.send_message("You can only use this command in the timetable view channel.", ephemeral=True)
+
+    embed = discord.Embed(title="Current Timetable Claims", color=0x8b2828)
+    for period, claims in timetable_data.items():
+        if claims:
+            embed.add_field(name=period, value="\n".join(claims), inline=False)
+        else:
+            embed.add_field(name=period, value="No claims", inline=False)
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="timetable_clear", description="Clear the timetable claims", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_TIMETABLE_CLEAR)
+async def timetable_clear(interaction: discord.Interaction):
+    if interaction.channel.id != CHANNEL_TIMETABLE_CLEAR:
+        return await interaction.response.send_message("You can only use this command in the timetable clear channel.", ephemeral=True)
+
+    global timetable_data
+    timetable_data = {f"Period {i}": [] for i in range(1, 6)}
+    await interaction.response.send_message("Timetable has been cleared.")
+
+@bot.tree.command(name="infract", description="Log an infraction", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_INFRACT_PROMOTE)
+@app_commands.describe(user="User to infract", reason="Reason for the infraction")
+async def infract(interaction: discord.Interaction, user: discord.Member, reason: str):
+    if interaction.channel.id != CHANNEL_INFRACT:
+        return await interaction.response.send_message("You can only use this command in the infraction channel.", ephemeral=True)
+
+    embed = discord.Embed(title="Infraction Logged", color=0x8b2828)
+    embed.add_field(name="User:", value=user.mention, inline=False)
+    embed.add_field(name="Logged By:", value=interaction.user.mention, inline=False)
+    embed.add_field(name="Reason:", value=reason, inline=False)
+    embed.set_footer(text=generate_footer("Infraction"))
+
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="promote", description="Log a promotion", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_INFRACT_PROMOTE)
+@app_commands.describe(user="User to promote", reason="Reason for the promotion")
+async def promote(interaction: discord.Interaction, user: discord.Member, reason: str):
+    if interaction.channel.id != CHANNEL_PROMOTE:
+        return await interaction.response.send_message("You can only use this command in the promotion channel.", ephemeral=True)
+
+    embed = discord.Embed(title="Promotion Logged", color=0x8b2828)
+    embed.add_field(name="User:", value=user.mention, inline=False)
+    embed.add_field(name="Logged By:", value=interaction.user.mention, inline=False)
+    embed.add_field(name="Reason:", value=reason, inline=False)
+    embed.set_footer(text=generate_footer("Promotion"))
+
+    await interaction.response.send_message(embed=embed)
 
 @bot.tree.command(name="session_log", description="Log a session", guild=GUILD_ID)
 @app_commands.checks.has_role(ROLE_SESSION_LOG)
@@ -110,35 +183,5 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
             embed.set_footer(text=f"{e['id']} • {dt}")
 
     await interaction.response.send_message(header, embed=embed)
-
-@bot.tree.command(name="infract", description="Log an infraction for a user", guild=GUILD_ID)
-@app_commands.checks.has_role(ROLE_INFRACT_PROMOTE)
-@app_commands.describe(user="User to infract", reason="Reason for the infraction")
-async def infract(interaction: discord.Interaction, user: discord.Member, reason: str):
-    if interaction.channel.id != CHANNEL_INFRACT:
-        return await interaction.response.send_message("You can only use this command in the infract channel.", ephemeral=True)
-
-    embed = discord.Embed(title="Infraction Log", color=0x8b2828)
-    embed.add_field(name="User:", value=user.mention, inline=False)
-    embed.add_field(name="Infracted By:", value=interaction.user.mention, inline=False)
-    embed.add_field(name="Reason:", value=reason, inline=False)
-    embed.set_footer(text=generate_footer("Infraction"))
-
-    await interaction.response.send_message(user.mention, embed=embed)
-
-@bot.tree.command(name="promote", description="Log a promotion for a user", guild=GUILD_ID)
-@app_commands.checks.has_role(ROLE_INFRACT_PROMOTE)
-@app_commands.describe(user="User to promote", reason="Reason for the promotion")
-async def promote(interaction: discord.Interaction, user: discord.Member, reason: str):
-    if interaction.channel.id != CHANNEL_PROMOTE:
-        return await interaction.response.send_message("You can only use this command in the promote channel.", ephemeral=True)
-
-    embed = discord.Embed(title="Promotion Log", color=0x8b2828)
-    embed.add_field(name="User:", value=user.mention, inline=False)
-    embed.add_field(name="Promoted By:", value=interaction.user.mention, inline=False)
-    embed.add_field(name="Reason:", value=reason, inline=False)
-    embed.set_footer(text=generate_footer("Promotion"))
-
-    await interaction.response.send_message(user.mention, embed=embed)
 
 bot.run(TOKEN)
