@@ -216,4 +216,17 @@ async def session_absence(
     await sent.add_reaction("✅")
     await sent.add_reaction("❌")
 
+# Custom embed sender
+@tree.command(name="embed", description="Send a custom embed from Discohook JSON", guild=discord.Object(id=GUILD_ID))
+@app_commands.describe(json_code="Embed JSON code from Discohook")
+@is_scheduler()
+async def embed(interaction: discord.Interaction, json_code: str):
+    try:
+        data = json.loads(json_code)
+        emb = discord.Embed.from_dict(data["embeds"][0])
+        await interaction.channel.send(embed=emb)
+        await interaction.response.send_message("✅ Embed sent.", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Invalid JSON: {e}", ephemeral=True)
+
 bot.run(TOKEN)
