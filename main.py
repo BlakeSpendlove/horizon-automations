@@ -184,24 +184,6 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
     late="Were they late instead of absent? (Y/N)"
 )
 
-# Custom embed sender
-@tree.command(name="embed", description="Send a custom embed from Discohook JSON", guild=discord.Object(id=GUILD_ID))
-@app_commands.describe(json_code="Embed JSON code from Discohook")
-@is_scheduler()
-async def embed(interaction: discord.Interaction, json_code: str):
-    try:
-        data = json.loads(json_code)
-        emb = discord.Embed.from_dict(data["embeds"][0])
-        await interaction.channel.send(embed=emb)
-        await interaction.response.send_message("✅ Embed sent.", ephemeral=True)
-    except Exception as e:
-        await interaction.response.send_message(f"❌ Invalid JSON: {e}", ephemeral=True)
-async def session_absence(
-    interaction: discord.Interaction,
-    user: discord.Member,
-    date: str,
-    reason: str,
-    late: str = None  # Optional field
 ):
     if interaction.channel.id != CHANNEL_SESSION_ABSENCE:
         return await interaction.response.send_message("You can only use this command in the correct channel.", ephemeral=True)
