@@ -180,9 +180,16 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
 @app_commands.describe(
     user="User who is absent",
     date="Date of the session they are missing",
-    reason="Reason for the absence"
+    reason="Reason for the absence",
+    late="Were they late instead of absent? (Y/N)"
 )
-async def session_absence(interaction: discord.Interaction, user: discord.Member, date: str, reason: str):
+async def session_absence(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    date: str,
+    reason: str,
+    late: str = None  # Optional field
+):
     if interaction.channel.id != CHANNEL_SESSION_ABSENCE:
         return await interaction.response.send_message("You can only use this command in the correct channel.", ephemeral=True)
 
@@ -194,6 +201,14 @@ async def session_absence(interaction: discord.Interaction, user: discord.Member
     embed.add_field(name="Logged By:", value=interaction.user.mention, inline=False)
     embed.add_field(name="Session Date:", value=date, inline=False)
     embed.add_field(name="Reason:", value=reason, inline=False)
+    
+    if late:
+        late_upper = late.strip().upper()
+        if late_upper in ["Y", "N"]:
+            embed.add_field(name="Late:", value="Yes" if late_upper == "Y" else "No", inline=False)
+        else:
+            return await interaction.response.send_message("❌ `late` must be either 'Y' or 'N' if provided.", ephemeral=True)
+
     embed.set_footer(text=f"React to confirm • ID: {log_id} • {timestamp.strftime('%d/%m/%Y %H:%M')}")
 
     await interaction.response.send_message(user.mention, embed=embed)
