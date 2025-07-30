@@ -14,6 +14,7 @@ ROLE_TIMETABLE_VIEW = 1330283312089923674
 ROLE_INFRACT_PROMOTE = 1330283312089923674
 ROLE_SESSION_LOG = 1330284350985470058
 ROLE_TIMETABLE_CLEAR = 1330283312089923674
+ROLE_EMBED = 1330283312089923674
 
 # Channel IDs
 CHANNEL_TIMETABLE_CLAIM = 1330295535986282506
@@ -207,5 +208,25 @@ async def session_absence(interaction: discord.Interaction, user: discord.Member
     sent = await interaction.original_response()
     await sent.add_reaction("✅")
     await sent.add_reaction("❌")
+@bot.tree.command(name="embed", description="Send a custom embed using Discohook-style JSON", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_EMBED)
+@app_commands.describe(json_code="Embed JSON (from Discohook)")
+async def embed(interaction: discord.Interaction, json_code: str):
+    try:
+        import json
+        data = json.loads(json_code)
+
+        if "embeds" not in data or not isinstance(data["embeds"], list):
+            return await interaction.response.send_message("❌ JSON must contain an `embeds` list.", ephemeral=True)
+
+        embeds = []
+        for e in data["embeds"]:
+            embeds.append(discord.Embed.from_dict(e))
+
+        await interaction.response.send_message(embeds=embeds)
+    except json.JSONDecodeError as e:
+        await interaction.response.send_message(f"❌ Invalid JSON: {e}", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Failed to send embed: {e}", ephemeral=True)
 
 bot.run(TOKEN)
