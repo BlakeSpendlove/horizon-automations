@@ -173,4 +173,31 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
             embed.add_field(name="​", value=f"[View Log]({e['url']}) — `{e['id']}` • {ts}", inline=False)
     await interaction.response.send_message(interaction.user.mention, embed=embed)
 
+@bot.tree.command(name="session_absence", description="Log a session absence", guild=GUILD_ID)
+@app_commands.checks.has_role(ROLE_SESSION_LOG)
+@app_commands.describe(
+    user="User who is absent",
+    date="Date of the session they are missing",
+    reason="Reason for the absence"
+)
+async def session_absence(interaction: discord.Interaction, user: discord.Member, date: str, reason: str):
+    if interaction.channel.id != CHANNEL_SESSION_LOG:
+        return await interaction.response.send_message("You can only use this command in the correct channel.", ephemeral=True)
+
+    log_id = gen_log_id()
+    timestamp = datetime.now(pytz.timezone("Europe/London"))
+
+    embed = discord.Embed(title="Session Absence Notice", color=0x8b2828)
+    embed.add_field(name="Absent User:", value=user.mention, inline=False)
+    embed.add_field(name="Logged By:", value=interaction.user.mention, inline=False)
+    embed.add_field(name="Session Date:", value=date, inline=False)
+    embed.add_field(name="Reason:", value=reason, inline=False)
+    embed.set_footer(text=f"React to confirm • ID: {log_id} • {timestamp.strftime('%d/%m/%Y %H:%M')}")
+
+    await interaction.response.send_message(user.mention, embed=embed)
+    sent = await interaction.original_response()
+    await sent.add_reaction("✅")
+    await sent.add_reaction("❌")
+
+
 bot.run(TOKEN)
