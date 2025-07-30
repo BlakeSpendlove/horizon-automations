@@ -1,4 +1,3 @@
-
 import os
 import discord
 from discord import app_commands
@@ -24,7 +23,6 @@ CHANNEL_INFRACT = 1394403198642556948
 CHANNEL_PROMOTE = 1394403244431769753
 CHANNEL_SESSION_LOG = 1394403467417747598
 CHANNEL_SESSION_ABSENCE = 1398324859557118002
-
 
 # In-memory storage
 user_logs = {}
@@ -183,8 +181,7 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
     reason="Reason for the absence",
     late="Were they late instead of absent? (Y/N)"
 )
-
-):
+async def session_absence(interaction: discord.Interaction, user: discord.Member, date: str, reason: str, late: str = None):
     if interaction.channel.id != CHANNEL_SESSION_ABSENCE:
         return await interaction.response.send_message("You can only use this command in the correct channel.", ephemeral=True)
 
