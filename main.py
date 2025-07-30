@@ -23,6 +23,8 @@ CHANNEL_TIMETABLE_CLEAR = 1330295535986282506
 CHANNEL_INFRACT = 1394403198642556948
 CHANNEL_PROMOTE = 1394403244431769753
 CHANNEL_SESSION_LOG = 1394403467417747598
+CHANNEL_SESSION_ABSENCE = 1398324859557118002
+
 
 # In-memory storage
 user_logs = {}
@@ -181,7 +183,7 @@ async def view_logs(interaction: discord.Interaction, user: discord.Member):
     reason="Reason for the absence"
 )
 async def session_absence(interaction: discord.Interaction, user: discord.Member, date: str, reason: str):
-    if interaction.channel.id != CHANNEL_SESSION_LOG:
+    if interaction.channel.id != CHANNEL_SESSION_ABSENCE:
         return await interaction.response.send_message("You can only use this command in the correct channel.", ephemeral=True)
 
     log_id = gen_log_id()
@@ -198,6 +200,5 @@ async def session_absence(interaction: discord.Interaction, user: discord.Member
     sent = await interaction.original_response()
     await sent.add_reaction("✅")
     await sent.add_reaction("❌")
-
 
 bot.run(TOKEN)
